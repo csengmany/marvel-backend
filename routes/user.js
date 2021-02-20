@@ -173,4 +173,18 @@ router.post("/user/favorite/comic", isAuthenticated, async (req, res) => {
     }
 });
 
+router.get("/user/favorites/:_id", isAuthenticated, async (req, res) => {
+    try {
+        //search the user
+        const user = await User.findById(req.params._id);
+        // send array of favorites
+        res.status(200).json({
+            _id: user._id,
+            favorite_characters: user.favorite_characters,
+            favorite_comics: user.favorite_comics,
+        });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
 module.exports = router;
