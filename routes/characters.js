@@ -18,7 +18,7 @@ router.get("/characters", async (req, res) => {
         }
         let skip = limit * numberOfPage;
         const response = await axios.get(
-            `https://lereacteur-marvel-api.herokuapp.com/characters?apiKey=${process.env.MARVEL_API_SECRET}&skip=${skip}&name=${name}`
+            `https://lereacteur-marvel-api.herokuapp.com/characters?apiKey=${process.env.MARVEL_API_SECRET}&skip=${skip}&name=${name}&limit=${limit}`
         );
         res.json(response.data);
     } catch (error) {
