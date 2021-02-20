@@ -173,7 +173,7 @@ router.post("/user/favorite/comic", isAuthenticated, async (req, res) => {
     }
 });
 
-router.get("/user/favorites/:_id", isAuthenticated, async (req, res) => {
+router.get("/user/favorites/:_id", async (req, res) => {
     try {
         //search the user
         const user = await User.findById(req.params._id);
