@@ -51,17 +51,17 @@ router.post("/user/signup", async (req, res) => {
                     });
                 } else {
                     res.status(400).json({
-                        message: "Change username, it is already used ⚠️",
+                        message: "Username not availaible",
                     });
                 }
             } else {
                 res.status(400).json({
-                    message: "This email already has an account ⚠️",
+                    message: "Email not available",
                 });
             }
         } else {
             res.status(400).json({
-                message: "Missing parameters ⚠️",
+                message: "Missing parameters",
             });
         }
     } catch (error) {
