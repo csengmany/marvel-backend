@@ -3,6 +3,7 @@ const router = express.Router();
 const uid2 = require("uid2");
 const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
+const isAuthenticated = require("../middlewares/isAuthenticated");
 
 const User = require("../models/User");
 
@@ -91,6 +92,81 @@ router.post("/user/login", async (req, res) => {
             }
         } else {
             res.status(401).json({ message: "Unauthorized ⚠️" });
+        }
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+router.post("/user/favorite/character", isAuthenticated, async (req, res) => {
+    try {
+        const { characterId, id } = req.fields;
+
+        if (id) {
+            //search the user
+            const userToUpdate = await User.findById(id);
+            // if characterId is new add to favorite
+            if (
+                userToUpdate.favorite_characters.length === 0 ||
+                userToUpdate.favorite_characters.indexOf(characterId) === -1
+            ) {
+                userToUpdate.favorite_characters.push(characterId);
+                await userToUpdate.save();
+                res.status(200).json({
+                    _id: userToUpdate._id,
+                    favorite_characters: userToUpdate.favorite_characters,
+                    favorite_comics: userToUpdate.favorite_comics,
+                });
+            } else {
+                //if characterId exist in array delete it
+                userToUpdate.favorite_characters.splice(
+                    userToUpdate.favorite_characters.indexOf(characterId),
+                    1
+                );
+                await userToUpdate.save();
+                res.status(200).json({
+                    _id: userToUpdate._id,
+                    favorite_characters: userToUpdate.favorite_characters,
+                    favorite_comics: userToUpdate.favorite_comics,
+                });
+            }
+        }
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+router.post("/user/favorite/comic", isAuthenticated, async (req, res) => {
+    try {
+        const { comicId, id } = req.fields;
+
+        if (id) {
+            //search the user
+            const userToUpdate = await User.findById(id);
+            // if comicId is new add to favorite
+            if (
+                userToUpdate.favorite_comics.length === 0 ||
+                userToUpdate.favorite_comics.indexOf(comicId) === -1
+            ) {
+                userToUpdate.favorite_comics.push(comicId);
+                await userToUpdate.save();
+                res.status(200).json({
+                    _id: userToUpdate._id,
+                    favorite_characters: userToUpdate.favorite_characters,
+                    favorite_comics: userToUpdate.favorite_comics,
+                });
+            } else {
+                //if comicId exist in array delete it
+                userToUpdate.favorite_comics.splice(
+                    userToUpdate.favorite_comics.indexOf(comicId),
+                    1
+                );
+                await userToUpdate.save();
+                res.status(200).json({
+                    _id: userToUpdate._id,
+                    favorite_characters: userToUpdate.favorite_characters,
+                    favorite_comics: userToUpdate.favorite_comics,
+                });
+            }
         }
     } catch (error) {
         res.status(400).json({ message: error.message });
