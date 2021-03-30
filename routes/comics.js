@@ -4,24 +4,13 @@ const axios = require("axios");
 
 router.get("/comics", async (req, res) => {
     try {
-        const { title, page, limit } = req.query;
+        const { title, skip, limit } = req.query;
 
-        //to fixe page and have same skip in frontend and backend :
-        let numberOfpage;
-        if (Number(page)) {
-            numberOfpage = page - 1; //if in frontend page 1 => page 0 in backend
-        }
-        let skip = numberOfpage * limit;
         const response = await axios.get(
             `https://lereacteur-marvel-api.herokuapp.com/comics?apiKey=${process.env.MARVEL_API_SECRET}&skip=${skip}&title=${title}&limit=${limit}`
         );
 
-        res.status(200).json(
-            response.data
-            // response.data.results.map((comics, index) => {
-            //     return comics.title;
-            // })
-        );
+        res.status(200).json(response.data);
     } catch (error) {
         console.log(error.message);
         res.status(400).json({ error: error.message });

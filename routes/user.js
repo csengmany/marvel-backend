@@ -4,7 +4,7 @@ const uid2 = require("uid2");
 const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
 const isAuthenticated = require("../middlewares/isAuthenticated");
-
+const axios = require("axios");
 const User = require("../models/User");
 
 router.post("/user/signup", async (req, res) => {
@@ -97,32 +97,53 @@ router.post("/user/login", async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 });
-
 router.post("/user/favorite/character", isAuthenticated, async (req, res) => {
     try {
         const { characterId, id } = req.fields;
-
         if (id) {
             //search the user
             const userToUpdate = await User.findById(id);
             // if characterId is new add to favorite
-            if (
-                userToUpdate.favorite_characters.length === 0 ||
-                userToUpdate.favorite_characters.indexOf(characterId) === -1
-            ) {
-                userToUpdate.favorite_characters.push(characterId);
+            if (userToUpdate.favorite_characters.length === 0) {
+                const response = await axios.get(
+                    `https://cathy-marvel-backend.herokuapp.com/comics/${characterId}`
+                );
+                userToUpdate.favorite_characters.push({
+                    thumbnail: response.data.thumbnail,
+                    _id: characterId,
+                    name: response.data.name,
+                    description: response.data.description,
+                    comics: response.data.comics,
+                });
                 await userToUpdate.save();
                 res.status(200).json({
                     _id: userToUpdate._id,
                     favorite_characters: userToUpdate.favorite_characters,
                     favorite_comics: userToUpdate.favorite_comics,
                 });
-            } else {
-                //if characterId exist in array delete it
-                userToUpdate.favorite_characters.splice(
-                    userToUpdate.favorite_characters.indexOf(characterId),
-                    1
+            } else if (userToUpdate.favorite_characters.length > 0) {
+                const response = await axios.get(
+                    `https://cathy-marvel-backend.herokuapp.com/comics/${characterId}`
                 );
+                const found = userToUpdate.favorite_characters.find(
+                    (element) => element._id === characterId
+                );
+                if (found) {
+                    //if characterId found in user favorite list
+                    userToUpdate.favorite_characters.map((character, index) => {
+                        if (character._id === characterId) {
+                            userToUpdate.favorite_characters.splice(index, 1);
+                        }
+                    });
+                } else {
+                    userToUpdate.favorite_characters.push({
+                        thumbnail: response.data.thumbnail,
+                        _id: characterId,
+                        name: response.data.name,
+                        description: response.data.description,
+                        comics: response.data.comics,
+                    });
+                }
                 await userToUpdate.save();
                 res.status(200).json({
                     _id: userToUpdate._id,
@@ -135,31 +156,53 @@ router.post("/user/favorite/character", isAuthenticated, async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 });
+
 router.post("/user/favorite/comic", isAuthenticated, async (req, res) => {
     try {
-        const { comicId, id } = req.fields;
+        const { comicId, id, title, path, extension, description } = req.fields;
 
         if (id) {
             //search the user
             const userToUpdate = await User.findById(id);
             // if comicId is new add to favorite
-            if (
-                userToUpdate.favorite_comics.length === 0 ||
-                userToUpdate.favorite_comics.indexOf(comicId) === -1
-            ) {
-                userToUpdate.favorite_comics.push(comicId);
+            if (userToUpdate.favorite_comics.length === 0) {
+                userToUpdate.favorite_comics.push({
+                    thumbnail: {
+                        path: path,
+                        extension: extension,
+                    },
+                    _id: comicId,
+                    title: title,
+                    description: description !== "null" ? description : " ",
+                });
                 await userToUpdate.save();
                 res.status(200).json({
                     _id: userToUpdate._id,
                     favorite_characters: userToUpdate.favorite_characters,
                     favorite_comics: userToUpdate.favorite_comics,
                 });
-            } else {
-                //if comicId exist in array delete it
-                userToUpdate.favorite_comics.splice(
-                    userToUpdate.favorite_comics.indexOf(comicId),
-                    1
+            } else if (userToUpdate.favorite_comics.length > 0) {
+                const found = userToUpdate.favorite_comics.find(
+                    (element) => element._id === comicId
                 );
+                if (found) {
+                    //if comicId exist in array delete it
+                    userToUpdate.favorite_comics.map((comic, index) => {
+                        if (comic._id === comicId) {
+                            userToUpdate.favorite_comics.splice(index, 1);
+                        }
+                    });
+                } else {
+                    userToUpdate.favorite_comics.push({
+                        thumbnail: {
+                            path: path,
+                            extension: extension,
+                        },
+                        _id: comicId,
+                        title: title,
+                        description: description !== "null" ? description : " ",
+                    });
+                }
                 await userToUpdate.save();
                 res.status(200).json({
                     _id: userToUpdate._id,
